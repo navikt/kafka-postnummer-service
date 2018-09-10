@@ -1,15 +1,14 @@
 package no.nav.kafka.postnummer;
 
-import no.nav.kafka.postnummer.schema.serde.PostnummerSerde;
-import no.nav.kafka.postnummer.schema.serde.PostnummerWithPoststedAndKommuneSerde;
-import no.nav.kafka.postnummer.web.NaisEndpoints;
-import no.nav.kafka.postnummer.web.PostnummerService;
 import no.nav.kafka.postnummer.schema.Kommune;
 import no.nav.kafka.postnummer.schema.Postnummer;
 import no.nav.kafka.postnummer.schema.PostnummerWithPoststedAndKommune;
 import no.nav.kafka.postnummer.schema.Poststed;
+import no.nav.kafka.postnummer.schema.serde.PostnummerSerde;
+import no.nav.kafka.postnummer.schema.serde.PostnummerWithPoststedAndKommuneSerde;
+import no.nav.kafka.postnummer.web.NaisEndpoints;
+import no.nav.kafka.postnummer.web.PostnummerService;
 import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.*;
@@ -30,13 +29,29 @@ public class Application {
     private static final Logger LOG = LoggerFactory.getLogger(Application.class);
 
     private static final String POSTNUMMER_TOPIC = "postnummer";
+    private static final String POSTNUMMER_STATE_STORE = "postnummer-store";
+
+    private final Topology topology;
 
     public static void main(String[] args) throws Exception {
+        Properties configs = new Properties();
+        configs.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        configs.put(StreamsConfig.APPLICATION_ID_CONFIG, "streams-postnummer-1-1");
 
+        new Application().run(configs);
+    }
+
+    public Application() {
+        StreamsBuilder builder = new StreamsBuilder();
+
+        configureStreams(builder);
+
+        topology = builder.build();
+    }
+
+    private void configureStreams(StreamsBuilder builder) {
         PostnummerSerde postnummerSerde = new PostnummerSerde();
         PostnummerWithPoststedAndKommuneSerde postnummerWithPoststedAndKommuneSerde = new PostnummerWithPoststedAndKommuneSerde();
-
-        StreamsBuilder builder = new StreamsBuilder();
 
         KTable<Postnummer, PostnummerWithPoststedAndKommune> postnummerTable = builder.stream(POSTNUMMER_TOPIC,
                 Consumed.with(Serdes.String(), Serdes.String())
@@ -65,25 +80,25 @@ public class Application {
                     public PostnummerWithPoststedAndKommune apply(Postnummer key, PostnummerWithPoststedAndKommune value, PostnummerWithPoststedAndKommune aggregate) {
                         return value;
                     }
-                }, Materialized.<Postnummer, PostnummerWithPoststedAndKommune, KeyValueStore<Bytes, byte[]>>as("postnummer-store")
+                }, Materialized.<Postnummer, PostnummerWithPoststedAndKommune, KeyValueStore<Bytes, byte[]>>as(POSTNUMMER_STATE_STORE)
                         .withKeySerde(postnummerSerde)
                         .withValueSerde(postnummerWithPoststedAndKommuneSerde));
 
         postnummerTable.toStream().print(Printed.toSysOut());
+    }
 
-        Properties configs = new Properties();
-        configs.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+    public Topology getTopology() {
+        return topology;
+    }
 
-        configs.put(StreamsConfig.APPLICATION_ID_CONFIG, "streams-postnummer-1-1");
-        configs.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-
-        KafkaStreams streams = new KafkaStreams(builder.build(), configs);
+    public void run(Properties configs) throws Exception {
+        KafkaStreams streams = new KafkaStreams(topology, configs);
 
         Supplier<ReadOnlyKeyValueStore<Postnummer, PostnummerWithPoststedAndKommune>> postnummerStoreSupplier = new Supplier<ReadOnlyKeyValueStore<Postnummer, PostnummerWithPoststedAndKommune>>() {
             @Override
             public ReadOnlyKeyValueStore<Postnummer, PostnummerWithPoststedAndKommune> get() {
                 LOG.info("Resolving postnummer store");
-                return streams.store(postnummerTable.queryableStoreName(), QueryableStoreTypes.keyValueStore());
+                return streams.store(POSTNUMMER_STATE_STORE, QueryableStoreTypes.keyValueStore());
             }
         };
 
