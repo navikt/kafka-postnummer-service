@@ -28,11 +28,7 @@ public class WebServer {
         jettyServer = new Server(port);
         jettyServer.setHandler(context);
 
-        ServletHolder jerseyServlet = new ServletHolder(new ServletContainer(resourceConfig));
-        jerseyServlet.setInitOrder(0);
-        jerseyServlet.setInitParameter("jersey.config.server.provider.packages", "no.nav.kafka.postnummer.web");
-
-        context.addServlet(jerseyServlet, "/*");
+        context.addServlet(new ServletHolder(new ServletContainer(resourceConfig)), "/*");
     }
 
     public void start() throws Exception {

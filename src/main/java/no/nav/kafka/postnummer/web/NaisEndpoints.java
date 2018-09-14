@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.core.Response;
 import java.util.function.BooleanSupplier;
 
@@ -24,15 +25,12 @@ public class NaisEndpoints {
     public Response isAlive() {
         LOG.trace("isAlive called");
 
-        if (isAliveSupplier.getAsBoolean()) {
-            LOG.trace("Returning {}", Response.noContent()
-                    .build());
-            return Response.noContent()
-                    .build();
+        if (!isAliveSupplier.getAsBoolean()) {
+            throw new ServiceUnavailableException();
         }
 
-        return Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                .build();
+        return Response.noContent()
+                    .build();
     }
 
     @GET
@@ -40,12 +38,11 @@ public class NaisEndpoints {
     public Response isReady() {
         LOG.trace("isReady called");
 
-        if (isReadySupplier.getAsBoolean()) {
-            return Response.noContent()
-                    .build();
+        if (!isReadySupplier.getAsBoolean()) {
+            throw new ServiceUnavailableException();
         }
 
-        return Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                .build();
+        return Response.noContent()
+                    .build();
     }
 }
