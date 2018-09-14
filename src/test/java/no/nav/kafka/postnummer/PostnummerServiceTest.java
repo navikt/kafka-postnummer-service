@@ -17,10 +17,10 @@ public class PostnummerServiceTest {
     @Before
     public void setUp() {
         Postnummer postnummer = new Postnummer("2010");
-        PostnummerStoreStub store = new PostnummerStoreStub(Collections.singletonMap(postnummer,
+        PostnummerRepositoryStub repository = new PostnummerRepositoryStub(Collections.singletonMap(postnummer,
                 new PostnummerWithPoststedAndKommune(postnummer, new Poststed("STRØMMEN"), new Kommune("0231", "SKEDSMO"))));
 
-        service = new PostnummerService(() -> store);
+        service = new PostnummerService(repository);
     }
 
     @Test

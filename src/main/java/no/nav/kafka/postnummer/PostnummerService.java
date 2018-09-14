@@ -4,20 +4,17 @@ import no.nav.kafka.postnummer.schema.Kommune;
 import no.nav.kafka.postnummer.schema.Postnummer;
 import no.nav.kafka.postnummer.schema.PostnummerWithPoststedAndKommune;
 import no.nav.kafka.postnummer.schema.Poststed;
-import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
-
-import java.util.function.Supplier;
 
 public class PostnummerService {
 
-    private final Supplier<ReadOnlyKeyValueStore<Postnummer, PostnummerWithPoststedAndKommune>> postnummerStore;
+    private final PostnummerRepository repository;
 
-    public PostnummerService(Supplier<ReadOnlyKeyValueStore<Postnummer, PostnummerWithPoststedAndKommune>> postnummerStore) {
-        this.postnummerStore = postnummerStore;
+    public PostnummerService(PostnummerRepository repository) {
+        this.repository = repository;
     }
 
     private PostnummerWithPoststedAndKommune lookup(Postnummer postnummer) {
-        PostnummerWithPoststedAndKommune postnummerWithPoststedAndKommune = postnummerStore.get().get(postnummer);
+        PostnummerWithPoststedAndKommune postnummerWithPoststedAndKommune = repository.get(postnummer);
         if (postnummerWithPoststedAndKommune == null) {
             throw new PostnummerNotFoundException(postnummer);
         }

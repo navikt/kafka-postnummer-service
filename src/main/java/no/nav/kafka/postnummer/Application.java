@@ -56,7 +56,7 @@ public class Application {
                         return false;
                     }
                 }))
-                .register(new PostnummerEndpoint(new PostnummerService(postnummerStoreSupplier)));
+                .register(new PostnummerEndpoint(new PostnummerService(new KafkaPostnummerRepository(postnummerStoreSupplier))));
 
             runWebserver(resourceConfig);
     }

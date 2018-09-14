@@ -1,7 +1,7 @@
 package no.nav.kafka.postnummer.web;
 
 import no.nav.kafka.postnummer.PostnummerService;
-import no.nav.kafka.postnummer.PostnummerStoreStub;
+import no.nav.kafka.postnummer.PostnummerRepositoryStub;
 import no.nav.kafka.postnummer.schema.Kommune;
 import no.nav.kafka.postnummer.schema.Postnummer;
 import no.nav.kafka.postnummer.schema.PostnummerWithPoststedAndKommune;
@@ -30,17 +30,17 @@ public class PostnummerEndpointTest {
 
     @Before
     public void setUp() throws Exception {
-        PostnummerStoreStub store = new PostnummerStoreStub(Collections.singletonMap(new Postnummer("2010"),
+        PostnummerRepositoryStub repository = new PostnummerRepositoryStub(Collections.singletonMap(new Postnummer("2010"),
                 new PostnummerWithPoststedAndKommune(new Postnummer("2010"), new Poststed("STRØMMEN"),
                         new Kommune("0231", "SKEDSMO"))));
 
-        startWebserver(store);
+        startWebserver(repository);
 
         Client client = ClientBuilder.newClient();
         target = client.target("http://localhost:8080");
     }
 
-    private void startWebserver(PostnummerStoreStub stub) throws Exception {
+    private void startWebserver(PostnummerRepositoryStub repository) throws Exception {
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SECURITY);
         context.setContextPath("/");
 
@@ -48,7 +48,7 @@ public class PostnummerEndpointTest {
         server.setHandler(context);
 
         context.addServlet(new ServletHolder(new ServletContainer(new ResourceConfig()
-                .register(new PostnummerEndpoint(new PostnummerService(() -> stub))))), "/*");
+                .register(new PostnummerEndpoint(new PostnummerService(repository))))), "/*");
 
         server.start();
     }
