@@ -9,7 +9,6 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
-import org.glassfish.jersey.jaxb.internal.XmlJaxbElementProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +18,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 public class Application {
-    private static final Logger LOG = LoggerFactory.getLogger(XmlJaxbElementProvider.App.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Application.class);
 
     public static void main(String[] args) throws Exception {
         Properties configs = new Properties();
