@@ -1,7 +1,7 @@
 package no.nav.kafka.postnummer.web;
 
-import no.nav.kafka.postnummer.PostnummerService;
-import no.nav.kafka.postnummer.PostnummerRepositoryStub;
+import no.nav.kafka.postnummer.service.PostnummerService;
+import no.nav.kafka.postnummer.service.PostnummerRepositoryStub;
 import no.nav.kafka.postnummer.schema.Kommune;
 import no.nav.kafka.postnummer.schema.Postnummer;
 import no.nav.kafka.postnummer.schema.PostnummerWithPoststedAndKommune;

@@ -1,9 +1,9 @@
-package no.nav.kafka.postnummer;
+package no.nav.kafka.postnummer.service;
 
 import no.nav.kafka.postnummer.schema.Postnummer;
 import no.nav.kafka.postnummer.schema.PostnummerWithPoststedAndKommune;
 
-public interface PostnummerRepository {
+interface PostnummerRepository {
 
     PostnummerWithPoststedAndKommune get(Postnummer postnummer)
             throws PostnummerNotFoundException;

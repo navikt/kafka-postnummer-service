@@ -1,4 +1,4 @@
-package no.nav.kafka.postnummer;
+package no.nav.kafka.postnummer.service;
 
 import no.nav.kafka.postnummer.schema.Postnummer;
 import no.nav.kafka.postnummer.schema.PostnummerWithPoststedAndKommune;

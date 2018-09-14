@@ -2,6 +2,8 @@ package no.nav.kafka.postnummer;
 
 import no.nav.kafka.postnummer.schema.Postnummer;
 import no.nav.kafka.postnummer.schema.PostnummerWithPoststedAndKommune;
+import no.nav.kafka.postnummer.service.KafkaPostnummerRepository;
+import no.nav.kafka.postnummer.service.PostnummerService;
 import no.nav.kafka.postnummer.web.NaisEndpoints;
 import no.nav.kafka.postnummer.web.PostnummerEndpoint;
 import org.apache.kafka.clients.CommonClientConfigs;
