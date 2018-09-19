@@ -1,7 +1,7 @@
 package no.nav.kafka.postnummer;
 
 import no.nav.kafka.postnummer.schema.Postnummer;
-import no.nav.kafka.postnummer.schema.PostnummerWithPoststedAndKommune;
+import no.nav.kafka.postnummer.schema.Poststed;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.TopologyTestDriver;
@@ -20,7 +20,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 public class PostnummerStreamTest {
 
     private TopologyTestDriver testDriver;
-    private KeyValueStore<Postnummer, PostnummerWithPoststedAndKommune> store;
+    private KeyValueStore<Postnummer, Poststed> store;
 
     @Before
     public void setUp() {
@@ -48,18 +48,19 @@ public class PostnummerStreamTest {
     public void thatRecordIsParsed() {
         createRecords("0001\tOSLO\t0301\tOSLO\tP");
 
-        PostnummerWithPoststedAndKommune postnummerWithPoststedAndKommune = store.get(new Postnummer("0001"));
-        Assert.assertThat(postnummerWithPoststedAndKommune.getPoststed().getPoststed(), equalTo("OSLO"));
-        Assert.assertThat(postnummerWithPoststedAndKommune.getKommune().getKommune(), equalTo("OSLO"));
-        Assert.assertThat(postnummerWithPoststedAndKommune.getKommune().getKommuneNr(), equalTo("0301"));
+        Poststed poststed = store.get(new Postnummer("0001"));
+        Assert.assertThat(poststed.getPoststed(), equalTo("OSLO"));
+        Assert.assertThat(poststed.getKommune(), equalTo("OSLO"));
+        Assert.assertThat(poststed.getKommuneNr(), equalTo("0301"));
+        Assert.assertThat(poststed.getType(), equalTo("P"));
     }
 
     @Test
     public void thatPostnummerCanChangePoststed() {
         createRecords("0001\tOSLO\t0301\tOSLO\tP", "0001\tTØNSBERG\t0410\tTØNSBERG\tP");
 
-        PostnummerWithPoststedAndKommune postnummerWithPoststedAndKommune = store.get(new Postnummer("0001"));
-        Assert.assertThat(postnummerWithPoststedAndKommune.getPoststed().getPoststed(), equalTo("TØNSBERG"));
+        Poststed poststed = store.get(new Postnummer("0001"));
+        Assert.assertThat(poststed.getPoststed(), equalTo("TØNSBERG"));
     }
 
     private void createRecords(String ...records) {

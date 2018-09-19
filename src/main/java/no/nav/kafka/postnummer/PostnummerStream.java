@@ -1,11 +1,9 @@
 package no.nav.kafka.postnummer;
 
-import no.nav.kafka.postnummer.schema.Kommune;
 import no.nav.kafka.postnummer.schema.Postnummer;
-import no.nav.kafka.postnummer.schema.PostnummerWithPoststedAndKommune;
 import no.nav.kafka.postnummer.schema.Poststed;
-import no.nav.kafka.postnummer.schema.serde.PostnummerSerde;
-import no.nav.kafka.postnummer.schema.serde.PostnummerWithPoststedAndKommuneSerde;
+import no.nav.kafka.postnummer.schema.serde.JsonSerde;
+import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KafkaStreams;
@@ -37,39 +35,39 @@ public class PostnummerStream {
     }
 
     private void configureStreams(StreamsBuilder builder) {
-        PostnummerSerde postnummerSerde = new PostnummerSerde();
-        PostnummerWithPoststedAndKommuneSerde postnummerWithPoststedAndKommuneSerde = new PostnummerWithPoststedAndKommuneSerde();
+        Serde<Postnummer> postnummerSerde = new JsonSerde<>(Postnummer.class);
+        Serde<Poststed> poststedSerde = new JsonSerde<>(Poststed.class);
 
-        KTable<Postnummer, PostnummerWithPoststedAndKommune> postnummerTable = builder.stream(POSTNUMMER_TOPIC,
+        KTable<Postnummer, Poststed> postnummerTable = builder.stream(POSTNUMMER_TOPIC,
                 Consumed.with(Serdes.String(), Serdes.String())
                         .withOffsetResetPolicy(Topology.AutoOffsetReset.EARLIEST))
-                .map(new KeyValueMapper<String, String, KeyValue<Postnummer, PostnummerWithPoststedAndKommune>>() {
+                .map(new KeyValueMapper<String, String, KeyValue<Postnummer, Poststed>>() {
                     @Override
-                    public KeyValue<Postnummer, PostnummerWithPoststedAndKommune> apply(String key, String value) {
+                    public KeyValue<Postnummer, Poststed> apply(String key, String value) {
                         StringTokenizer tokenizer = new StringTokenizer(value, "\t");
                         Postnummer postnummer = new Postnummer(tokenizer.nextToken());
                         return new KeyValue<>(
                                 postnummer,
-                                new PostnummerWithPoststedAndKommune(postnummer,
-                                        new Poststed(tokenizer.nextToken()),
-                                        new Kommune(tokenizer.nextToken(), tokenizer.nextToken()))
+                                new Poststed(postnummer.getPostnummer(), tokenizer.nextToken(),
+                                        tokenizer.nextToken(), tokenizer.nextToken(),
+                                        tokenizer.nextToken())
                         );
                     }
                 })
-                .groupByKey(Serialized.with(postnummerSerde, postnummerWithPoststedAndKommuneSerde))
-                .aggregate(new Initializer<PostnummerWithPoststedAndKommune>() {
+                .groupByKey(Serialized.with(postnummerSerde, poststedSerde))
+                .aggregate(new Initializer<Poststed>() {
                     @Override
-                    public PostnummerWithPoststedAndKommune apply() {
+                    public Poststed apply() {
                         return null;
                     }
-                }, new Aggregator<Postnummer, PostnummerWithPoststedAndKommune, PostnummerWithPoststedAndKommune>() {
+                }, new Aggregator<Postnummer, Poststed, Poststed>() {
                     @Override
-                    public PostnummerWithPoststedAndKommune apply(Postnummer key, PostnummerWithPoststedAndKommune value, PostnummerWithPoststedAndKommune aggregate) {
+                    public Poststed apply(Postnummer key, Poststed value, Poststed aggregate) {
                         return value;
                     }
-                }, Materialized.<Postnummer, PostnummerWithPoststedAndKommune, KeyValueStore<Bytes, byte[]>>as(POSTNUMMER_STATE_STORE)
+                }, Materialized.<Postnummer, Poststed, KeyValueStore<Bytes, byte[]>>as(POSTNUMMER_STATE_STORE)
                         .withKeySerde(postnummerSerde)
-                        .withValueSerde(postnummerWithPoststedAndKommuneSerde));
+                        .withValueSerde(poststedSerde));
 
         postnummerTable.toStream().print(Printed.toSysOut());
     }

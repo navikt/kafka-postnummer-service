@@ -89,9 +89,12 @@ vår alltid er oppdatert med Postens endringer.
 ### Teste
 
 ```
-$ curl http://localhost:8080/postnummer/0354
-  {"poststed":"OSLO"}
-
-$ curl http://localhost:8080/postnummer/0354/kommune
-  {"kommuneNr":"0301","kommune":"OSLO"}
+$ curl http://localhost:8080/postnummer/0354 | jq
+{
+  "postnummer": "0354",
+  "poststed": "OSLO",
+  "kommuneNr": "0301",
+  "kommune": "OSLO",
+  "type": "G"
+}
 ```

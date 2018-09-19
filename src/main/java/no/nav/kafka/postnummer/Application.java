@@ -1,7 +1,7 @@
 package no.nav.kafka.postnummer;
 
 import no.nav.kafka.postnummer.schema.Postnummer;
-import no.nav.kafka.postnummer.schema.PostnummerWithPoststedAndKommune;
+import no.nav.kafka.postnummer.schema.Poststed;
 import no.nav.kafka.postnummer.service.KafkaPostnummerRepository;
 import no.nav.kafka.postnummer.service.PostnummerService;
 import no.nav.kafka.postnummer.web.NaisEndpoints;
@@ -31,9 +31,9 @@ public class Application {
 
         KafkaStreams streams = postnummerStream.run(configs);
 
-        Supplier<ReadOnlyKeyValueStore<Postnummer, PostnummerWithPoststedAndKommune>> postnummerStoreSupplier = new Supplier<ReadOnlyKeyValueStore<Postnummer, PostnummerWithPoststedAndKommune>>() {
+        Supplier<ReadOnlyKeyValueStore<Postnummer, Poststed>> postnummerStoreSupplier = new Supplier<ReadOnlyKeyValueStore<Postnummer, Poststed>>() {
             @Override
-            public ReadOnlyKeyValueStore<Postnummer, PostnummerWithPoststedAndKommune> get() {
+            public ReadOnlyKeyValueStore<Postnummer, Poststed> get() {
                 LOG.info("Resolving postnummer store");
                 return streams.store(PostnummerStream.POSTNUMMER_STATE_STORE, QueryableStoreTypes.keyValueStore());
             }

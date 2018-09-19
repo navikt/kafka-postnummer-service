@@ -1,10 +1,9 @@
 package no.nav.kafka.postnummer.web;
 
-import no.nav.kafka.postnummer.service.PostnummerNotFoundException;
-import no.nav.kafka.postnummer.service.PostnummerService;
-import no.nav.kafka.postnummer.schema.Kommune;
 import no.nav.kafka.postnummer.schema.Postnummer;
 import no.nav.kafka.postnummer.schema.Poststed;
+import no.nav.kafka.postnummer.service.PostnummerNotFoundException;
+import no.nav.kafka.postnummer.service.PostnummerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,13 +38,5 @@ public class PostnummerEndpoint {
     public Poststed poststed(@PathParam("postnummer") Postnummer postnummer) {
         LOG.trace("Lookup for postnummer={}", postnummer);
         return wrapException(postnummerService::findPoststed, postnummer);
-    }
-
-    @GET
-    @Path("kommune")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Kommune kommune(@PathParam("postnummer") Postnummer postnummer) {
-        LOG.trace("Lookup for postnummer={}", postnummer);
-        return wrapException(postnummerService::findKommune, postnummer);
     }
 }

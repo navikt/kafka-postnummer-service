@@ -1,11 +1,9 @@
 package no.nav.kafka.postnummer.web;
 
-import no.nav.kafka.postnummer.service.PostnummerService;
-import no.nav.kafka.postnummer.service.PostnummerRepositoryStub;
-import no.nav.kafka.postnummer.schema.Kommune;
 import no.nav.kafka.postnummer.schema.Postnummer;
-import no.nav.kafka.postnummer.schema.PostnummerWithPoststedAndKommune;
 import no.nav.kafka.postnummer.schema.Poststed;
+import no.nav.kafka.postnummer.service.PostnummerRepositoryStub;
+import no.nav.kafka.postnummer.service.PostnummerService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -31,8 +29,7 @@ public class PostnummerEndpointTest {
     @Before
     public void setUp() throws Exception {
         PostnummerRepositoryStub repository = new PostnummerRepositoryStub(Collections.singletonMap(new Postnummer("2010"),
-                new PostnummerWithPoststedAndKommune(new Postnummer("2010"), new Poststed("STRØMMEN"),
-                        new Kommune("0231", "SKEDSMO"))));
+                new Poststed("2010", "STRØMMEN", "0231", "SKEDSMO", "P")));
 
         startWebserver(repository);
 
@@ -61,24 +58,20 @@ public class PostnummerEndpointTest {
 
     @Test(expected = NotFoundException.class)
     public void thatNotFoundIsThrownWhenPostnummerIsAbsent() {
-        target.path("poststed").request().get(Poststed.class);
+        target.path("postnummer").request().get(Poststed.class);
     }
 
     @Test(expected = NotFoundException.class)
     public void thatNotFoundIsThrownWhenPostnummerDoesNotExist() {
-        target.path("poststed").path("9999").request().get(Poststed.class);
+        target.path("postnummer").path("9999").request().get(Poststed.class);
     }
 
     @Test
     public void poststed() {
         Poststed response = target.path("postnummer").path("2010").request().get(Poststed.class);
         Assert.assertEquals("STRØMMEN", response.getPoststed());
-    }
-
-    @Test
-    public void kommune() {
-        Kommune kommune = target.path("postnummer").path("2010").path("kommune").request().get(Kommune.class);
-        Assert.assertEquals("0231", kommune.getKommuneNr());
-        Assert.assertEquals("SKEDSMO", kommune.getKommune());
+        Assert.assertEquals("SKEDSMO", response.getKommune());
+        Assert.assertEquals("0231", response.getKommuneNr());
+        Assert.assertEquals("P", response.getType());
     }
 }
