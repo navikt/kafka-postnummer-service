@@ -1,3 +1,11 @@
 name: postnummer-service
 image: navikt/postnummer-service
-
+fasitResources:
+  used:
+    - alias: postnummer-service-properties
+      resourceType: applicationproperties
+    - alias: srvpostnummer-service
+      resourceType: credential
+      propertyMap:
+        username: KAFKA_USERNAME
+        password: KAFKA_PASSWORD
