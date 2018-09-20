@@ -6,6 +6,7 @@ import no.nav.kafka.postnummer.web.NaisEndpoints;
 import no.nav.kafka.postnummer.web.PostnummerEndpoint;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.config.SaslConfigs;
+import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.streams.StreamsConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.Logger;
@@ -34,6 +35,12 @@ public class Application {
                 "password=\"" + getRequiredProperty(env, "KAFKA_PASSWORD") + "\";");
         configs.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
         configs.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
+
+        Optional<String> truststoreLocation = Optional.ofNullable(env.get("KAFKA_SSL_TRUSTSTORE_PATH"));
+        if (truststoreLocation.isPresent()) {
+            configs.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststoreLocation.get());
+            configs.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, env.get("KAFKA_SSL_TRUSTSTORE_PASSWORD"));
+        }
 
         new Application(configs).run();
     }
