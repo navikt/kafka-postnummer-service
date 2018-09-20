@@ -12,19 +12,25 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.apache.kafka.streams.state.QueryableStoreTypes;
+import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.function.Supplier;
 
 public class PostnummerStream {
     private static final Logger LOG = LoggerFactory.getLogger(PostnummerStream.class);
 
     private static final String POSTNUMMER_TOPIC = "postnummer";
-    static final String POSTNUMMER_STATE_STORE = "postnummer-store";
+    private static final String POSTNUMMER_STATE_STORE = "postnummer-store";
 
     private final Topology topology;
+
+    private Supplier<ReadOnlyKeyValueStore<Postnummer, Poststed>> postnummerStoreSupplier;
+    private KafkaStreams streams;
 
     public PostnummerStream() {
         StreamsBuilder builder = new StreamsBuilder();
@@ -76,8 +82,20 @@ public class PostnummerStream {
         return topology;
     }
 
-    public KafkaStreams run(Properties configs) throws Exception {
-        KafkaStreams streams = new KafkaStreams(topology, configs);
+    public Supplier<ReadOnlyKeyValueStore<Postnummer, Poststed>> getStore() {
+        return postnummerStoreSupplier;
+    }
+
+    public void run(Properties configs) {
+        streams = new KafkaStreams(topology, configs);
+
+        postnummerStoreSupplier = new Supplier<ReadOnlyKeyValueStore<Postnummer, Poststed>>() {
+            @Override
+            public ReadOnlyKeyValueStore<Postnummer, Poststed> get() {
+                LOG.info("Resolving postnummer store");
+                return streams.store(POSTNUMMER_STATE_STORE, QueryableStoreTypes.keyValueStore());
+            }
+        };
 
         streams.setStateListener(new KafkaStreams.StateListener() {
             @Override
@@ -85,6 +103,7 @@ public class PostnummerStream {
                 LOG.info("From state={} to state={}", oldState, newState);
             }
         });
+
         streams.cleanUp();
         streams.start();
 
@@ -92,7 +111,9 @@ public class PostnummerStream {
             LOG.info("Shutting down streams");
             streams.close();
         }));
+    }
 
-        return streams;
+    public boolean isRunning() {
+        return streams.state().isRunning();
     }
 }

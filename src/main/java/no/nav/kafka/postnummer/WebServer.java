@@ -33,6 +33,15 @@ public class WebServer {
 
     public void start() throws Exception {
         jettyServer.start();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                LOG.info("Shutting down web server");
+                stop();
+            } catch (Exception e) {
+                LOG.error("Error while shutting down web server", e);
+            }
+        }));
     }
 
     public void stop() throws Exception {

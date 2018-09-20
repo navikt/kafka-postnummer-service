@@ -28,6 +28,11 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
+task run(dependsOn: 'testClasses', overwrite: true, type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    main = 'no.nav.kafka.postnummer.TestApplication'
+}
+
 repositories {
     mavenCentral()
 }

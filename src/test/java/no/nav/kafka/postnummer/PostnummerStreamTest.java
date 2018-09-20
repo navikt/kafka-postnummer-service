@@ -24,12 +24,11 @@ public class PostnummerStreamTest {
 
     @Before
     public void setUp() {
-        PostnummerStream stream = new PostnummerStream();
-
         Properties props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test");
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
 
+        PostnummerStream stream = new PostnummerStream();
         testDriver = new TopologyTestDriver(stream.getTopology(), props);
         store = testDriver.getKeyValueStore("postnummer-store");
     }

@@ -1,80 +1,67 @@
 package no.nav.kafka.postnummer;
 
-import no.nav.kafka.postnummer.schema.Postnummer;
-import no.nav.kafka.postnummer.schema.Poststed;
 import no.nav.kafka.postnummer.service.KafkaPostnummerRepository;
 import no.nav.kafka.postnummer.service.PostnummerService;
 import no.nav.kafka.postnummer.web.NaisEndpoints;
 import no.nav.kafka.postnummer.web.PostnummerEndpoint;
 import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.state.QueryableStoreTypes;
-import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
-import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
 
 public class Application {
     private static final Logger LOG = LoggerFactory.getLogger(Application.class);
 
+    private final ResourceConfig resourceConfig = new ResourceConfig();
+    private final WebServer webServer = new WebServer(resourceConfig);
+    private final PostnummerStream postnummerStream = new PostnummerStream();
+    private final Properties configs;
+
     public static void main(String[] args) throws Exception {
+        Map<String, String> env = System.getenv();
+
         Properties configs = new Properties();
-        configs.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        configs.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, "b27apvl00045.preprod.local:8443,b27apvl00046.preprod.local:8443,b27apvl00047.preprod.local:8443");
         configs.put(StreamsConfig.APPLICATION_ID_CONFIG, "streams-postnummer-1-1");
+        configs.put(SaslConfigs.SASL_JAAS_CONFIG, "org.apache.kafka.common.security.plain.PlainLoginModule required " +
+                "username=\"" + getRequiredProperty(env, "KAFKA_USERNAME") + "\" " +
+                "password=\"" + getRequiredProperty(env, "KAFKA_PASSWORD") + "\";");
+        configs.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
+        configs.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
 
-        PostnummerStream postnummerStream = new PostnummerStream();
-
-        KafkaStreams streams = postnummerStream.run(configs);
-
-        Supplier<ReadOnlyKeyValueStore<Postnummer, Poststed>> postnummerStoreSupplier = new Supplier<ReadOnlyKeyValueStore<Postnummer, Poststed>>() {
-            @Override
-            public ReadOnlyKeyValueStore<Postnummer, Poststed> get() {
-                LOG.info("Resolving postnummer store");
-                return streams.store(PostnummerStream.POSTNUMMER_STATE_STORE, QueryableStoreTypes.keyValueStore());
-            }
-        };
-
-        ResourceConfig resourceConfig = new ResourceConfig()
-                .register(new NaisEndpoints(new BooleanSupplier() {
-                    @Override
-                    public boolean getAsBoolean() {
-                        return streams.state().isRunning();
-                    }
-                }, new BooleanSupplier() {
-                    @Override
-                    public boolean getAsBoolean() {
-                        try {
-                            postnummerStoreSupplier.get();
-                            return true;
-                        } catch (Exception e) {
-                            LOG.warn(e.getMessage(), e);
-                        }
-
-                        return false;
-                    }
-                }))
-                .register(new PostnummerEndpoint(new PostnummerService(new KafkaPostnummerRepository(postnummerStoreSupplier))));
-
-            runWebserver(resourceConfig);
+        new Application(configs).run();
     }
 
-    private static void runWebserver(ResourceConfig resourceConfig) throws Exception {
-        WebServer webServer = new WebServer(resourceConfig);
+    private static <K, V> V getRequiredProperty(Map<K, V> map, K key) {
+        return Optional.ofNullable(map.get(key)).orElseThrow(() -> new IllegalStateException("Missing required property " + key));
+    }
+
+    public Application(Properties configs) {
+        this.configs = configs;
+    }
+
+    public void run() throws Exception {
+        postnummerStream.run(configs);
+
+        resourceConfig.register(new NaisEndpoints(postnummerStream::isRunning, () -> {
+                try {
+                    postnummerStream.getStore().get();
+                    return true;
+                } catch (Exception e) {
+                    LOG.warn(e.getMessage(), e);
+                }
+
+                return false;
+            }))
+                .register(new PostnummerEndpoint(new PostnummerService(new KafkaPostnummerRepository(postnummerStream.getStore()))));
+
 
         webServer.start();
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                LOG.info("Shutting down web server");
-                webServer.stop();
-            } catch (Exception e) {
-                LOG.error("Error while shutting down web server", e);
-            }
-        }));
     }
 }
