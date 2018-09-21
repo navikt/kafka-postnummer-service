@@ -9,7 +9,7 @@ import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.core.Response;
 import java.util.function.BooleanSupplier;
 
-@Path("/internal")
+@Path("/")
 public class NaisEndpoints {
     private static final Logger LOG = LoggerFactory.getLogger(NaisEndpoints.class);
     private final BooleanSupplier isAliveSupplier;
@@ -23,12 +23,12 @@ public class NaisEndpoints {
     @GET
     @Path("isAlive")
     public Response isAlive() {
-        LOG.trace("isAlive called");
-
         if (!isAliveSupplier.getAsBoolean()) {
+            LOG.trace("isAlive called, returning not ok");
             throw new ServiceUnavailableException();
         }
 
+        LOG.trace("isAlive called, returning ok");
         return Response.noContent()
                     .build();
     }
@@ -36,12 +36,12 @@ public class NaisEndpoints {
     @GET
     @Path("isReady")
     public Response isReady() {
-        LOG.trace("isReady called");
-
         if (!isReadySupplier.getAsBoolean()) {
+            LOG.trace("isReady called, returning not ok");
             throw new ServiceUnavailableException();
         }
 
+        LOG.trace("isReady called, returning ok");
         return Response.noContent()
                     .build();
     }

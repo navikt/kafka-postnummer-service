@@ -53,28 +53,28 @@ public class NaisEndpointsTest {
     @Test
     public void thatServiceUnavailableIsReturnedWhenIsAliveIsFalse() {
         isAlive = false;
-        Response response = target.path("internal").path("isAlive").request().get(Response.class);
+        Response response = target.path("isAlive").request().get(Response.class);
         Assert.assertEquals(503, response.getStatus());
     }
 
     @Test
     public void isAlive() {
         isAlive = true;
-        Response response = target.path("internal").path("isAlive").request().get(Response.class);
+        Response response = target.path("isAlive").request().get(Response.class);
         Assert.assertEquals(204, response.getStatus());
     }
 
     @Test
     public void thatServiceUnavailableIsReturnedWhenIsReadyIsFalse() {
         isReady = false;
-        Response response = target.path("internal").path("isReady").request().get(Response.class);
+        Response response = target.path("isReady").request().get(Response.class);
         Assert.assertEquals(503, response.getStatus());
     }
 
     @Test
     public void isReady() {
         isReady = true;
-        Response response = target.path("internal").path("isReady").request().get(Response.class);
+        Response response = target.path("isReady").request().get(Response.class);
         Assert.assertEquals(204, response.getStatus());
     }
 }
