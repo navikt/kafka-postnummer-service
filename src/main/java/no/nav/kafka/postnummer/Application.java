@@ -65,7 +65,7 @@ public class Application {
                     postnummerStream.getStore().get();
                     return true;
                 } catch (Exception e) {
-                    LOG.warn(e.getMessage(), e);
+                    LOG.warn("Exception while fetching state store; not ready for traffic", e);
                 }
 
                 return false;
