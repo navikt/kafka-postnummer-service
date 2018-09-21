@@ -2,16 +2,20 @@ sudo: required
 language: java
 services:
 - docker
-
 before_script:
-  - echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
-  - git config user.name navikt-ci
-  - git config user.email 32665735+navikt-ci@users.noreply.github.com
+- echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
+- git config user.name navikt-ci
+- git config user.email 32665735+navikt-ci@users.noreply.github.com
 script:
-  - make bump-version
-  - make
-  - make release
-  - git push --tags https://${GITHUB_TOKEN}@github.com/navikt/kafka-postnummer-service
+- make bump-version
+- make
+- make release
+- git push --tags https://${GITHUB_TOKEN}@github.com/navikt/kafka-postnummer-service
 branches:
   only:
   - master
+env:
+  global:
+  - secure: bRcNKnb7zdyzGppqeZJ52ACBh0D9Hcv15hp9I8wH2SHn5TOwnH+j8HKuFPNWbLn8pcTdcEVGDhy615ttSTukCQS/xHqpq9+np0tjoojrjOvRAIo/O5ijHZFf+jARcmCTwp6ifTPmqySf/Gazz2TfXjPPJ3vkHTMqoQ6MxPKRvd3M93UTHyChy2ewBIL7mDNSbSDb+qoUiwg6zgBG3h5yDYHO/zf6c2MT+EmeLm7kCLLanqLCfTd0wTGHAPSrd8wevonN3Z22s/TB01eGeGLjZhhmvHgpUaxaJN+Z+hPYmVGwhy60kUKY075jVPEVvxCx4BqSVJNoHWhViVwCKhGnlbq0st1ZIzkhT/qYX5hpNyw4i3KfgU09p6HMJBC2TZeA9qtBPe25cpx2h1vkghZ84WMoGu4xDZOvoDdC89e2pTV1lw/HeAiM+WhNGhxjeux5MZWzJAIvB4XUeTiCfxxIJeWfSGF+bi2C708xyNF766jQA53sykHm31t7ACBWeyT0gadyHpM5otI3E8xDn2NKXK+d9BTTxwurAvK5hWxG1detnKw9QpgOFiytGliRZwLPMQLAgsJazOc1WFtWvhYkFMWPS1smLzhhG87gG7UbNWHL9Zo+qQ4/BjZ4mBFSaaDXhP38J37GUPriLQSILV3mRwv6O03ghn+dIcgmdqL04GA=
+  - secure: ugMdCvE6Dv6ulI96b1tz7TQD2ychsvwOQJsbjp3EIqCCFc2jRAMUiisnIIbmg5gxWlQfXFD5R0JVagoOsFvzbL5XRF0WYQsSOztxpUSA1R8iRhMXvdxy8t+twrHag2CwNgjverEe7FBw3h2O1ePrac02WPWShJCTRs7HeDqBY/sezRDWzqsoVZSmMwAG1F3IIcB7ipjRxTxnGBzxT+SeQszY+DiKJW4ptNZbqn9hxDmeQPtscEwjnKy6xJVXUx/5b9TU7XmR207wZ4xFBXiraJbuX4RGZLa8axQsOabXc1jHr3N0Qy4bDsAUJY0aoWustWyxk7MURJIub2HQLZ6wCSizmDuHvUGcNxTNL/tG+cgTYCkdGyEdaYfW0e5HgH50UZUakFOUTYTFKqzs1MLVvPBdksEG4oAASO95X3lBLSI8yYvrlMDvp+yOKa722uEERS6OYIeHQUgI0W6Dx6W2UgWnKaduBSObjIN9ezHScW3QsF8OhF48J0Nuh3ScprZf3yFQo6qxoxqYmvN3KRzizCzTvly/jWDAfTVHy2bKED7PTaJouya+BcJMxX92uKy4ohlLFOeg0VIt6Zq3tOQrFSYov/F8uEV2uypBWUCdS4tUIOL+M1GXHxlsdrRdGIWgUbflfQil8E2f77uVmsqaLFwLR3kawk4fyYcKKdHpCK0=
+  - secure: NdXaW/TrjG3xvdI7O5U9LhlVHwwrCUTyob/cwvY1gXZyf+dmJjb7mp4rvsICUwo/e32TWjxW01U0c9X03voeksZ4raXzyq/O7Azs29aVhsncxe6zKDco2OdO0vie/Sid7Q7IpB1o7AwYR8gKwGwxdcMQKF/J79biCIrPNthZcSFOTNXlQ8QJXTf4wxEyaHuQSAiproYibqsHAbZ2qIJF79F8LZtMKjwsLZ6in2fu1U5iGK59hanp+MetXcqwTesJ7CUd/b6aX/Gi3L9RROdvJTw658NFn2yxoXxM/N6SlCjwPMPZsVEI8klBoMi0O6UBlMMcTfm4/ftw9shURSA8V+vZ4CmSzcmA5SOOc9ys/U6vIX8PO3HS8ua6OkwTbtG7KnzvEKFRhRxJ622A+mTWDTshD1sFS2lBp2JxBpM4R/Il3vyL58ZA0G7OEqPrxyHmi+R2o/YPySs4xIkmcqJqk/jprno2NX9qbUznIgGE5IOUo4n3X58b5WIcEzGdwEHNVS46dEv/nh4PjIS/kZrYQvQYHZQyEyjh/Rf9Q/+e2VeCz80NNCpsJuQnmNpoAT/4DX+PM0I4sCcMLbW9G/GrIIZju5RYfp9ysB8S/oNDOREthM8aAy9K3cPV8iSUF6Gsyn98ZPDuiljB0VoxjyKBtV2oN06Xro5FQUqaXoKhGO0=
