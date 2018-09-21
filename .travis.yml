@@ -10,6 +10,7 @@ before_deploy:
 - git config user.name navikt-ci
 - git config user.email 32665735+navikt-ci@users.noreply.github.com
 deploy:
+  skip_cleanup: true
   provider: script
   script: bash travis/deploy.sh
   on:
