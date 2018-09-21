@@ -39,7 +39,11 @@ public class Application {
         Optional<String> truststoreLocation = Optional.ofNullable(env.get("KAFKA_SSL_TRUSTSTORE_PATH"));
         if (truststoreLocation.isPresent()) {
             configs.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststoreLocation.get());
-            configs.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, env.get("KAFKA_SSL_TRUSTSTORE_PASSWORD"));
+
+            Optional<String> truststorePassword = Optional.ofNullable(env.get("KAFKA_SSL_TRUSTSTORE_PASSWORD"));
+            if (truststorePassword.isPresent()) {
+                configs.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, truststorePassword.get());
+            }
         }
 
         new Application(configs).run();
