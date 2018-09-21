@@ -3,7 +3,7 @@ language: java
 services:
 - docker
 before_script:
-- echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
+- docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 - git config user.name navikt-ci
 - git config user.email 32665735+navikt-ci@users.noreply.github.com
 script:
