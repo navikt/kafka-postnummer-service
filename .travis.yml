@@ -1,1 +1,17 @@
+sudo: required
 language: java
+services:
+- docker
+
+before_script:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - git config user.name navikt-ci
+  - git config user.email 32665735+navikt-ci@users.noreply.github.com
+script:
+  - make bump-version
+  - make
+  - make release
+  - git push --tags https://${GITHUB_TOKEN}@github.com/navikt/kafka-postnummer-service
+branches:
+  only:
+  - master
