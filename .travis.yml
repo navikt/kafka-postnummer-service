@@ -5,13 +5,8 @@ services:
 script:
 - make bump-version
 - make
-before_deploy:
+after_success:
 - echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
 - git config user.name navikt-ci
 - git config user.email 32665735+navikt-ci@users.noreply.github.com
-deploy:
-  skip_cleanup: true
-  provider: script
-  script: bash travis/deploy.sh
-  on:
-    branch: master
+- ./travis/deploy.sh
