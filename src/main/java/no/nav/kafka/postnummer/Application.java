@@ -28,7 +28,7 @@ public class Application {
         Map<String, String> env = System.getenv();
 
         Properties configs = new Properties();
-        configs.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, "b27apvl00045.preprod.local:8443,b27apvl00046.preprod.local:8443,b27apvl00047.preprod.local:8443");
+        configs.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, getRequiredProperty(env, "KAFKA_BOOTSTRAP_SERVERS"));
         configs.put(StreamsConfig.APPLICATION_ID_CONFIG, "streams-postnummer-1-1");
         configs.put(SaslConfigs.SASL_JAAS_CONFIG, "org.apache.kafka.common.security.plain.PlainLoginModule required " +
                 "username=\"" + getRequiredProperty(env, "KAFKA_USERNAME") + "\" " +
@@ -36,11 +36,11 @@ public class Application {
         configs.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
         configs.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
 
-        Optional<String> truststoreLocation = Optional.ofNullable(env.get("KAFKA_SSL_TRUSTSTORE_PATH"));
+        Optional<String> truststoreLocation = Optional.ofNullable(env.get("NAV_TRUSTSTORE_PATH"));
         if (truststoreLocation.isPresent()) {
             configs.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststoreLocation.get());
 
-            Optional<String> truststorePassword = Optional.ofNullable(env.get("KAFKA_SSL_TRUSTSTORE_PASSWORD"));
+            Optional<String> truststorePassword = Optional.ofNullable(env.get("NAV_TRUSTSTORE_PASSWORD"));
             if (truststorePassword.isPresent()) {
                 configs.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, truststorePassword.get());
             }
