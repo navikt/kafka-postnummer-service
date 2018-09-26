@@ -15,7 +15,7 @@ public class KafkaPostnummerRepository implements PostnummerRepository {
     }
 
     @Override
-    public Poststed get(Postnummer postnummer) throws PostnummerNotFoundException {
+    public Poststed get(Postnummer postnummer) {
         return storeSupplier.get().get(postnummer);
     }
 }

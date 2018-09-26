@@ -5,6 +5,5 @@ import no.nav.kafka.postnummer.schema.Poststed;
 
 interface PostnummerRepository {
 
-    Poststed get(Postnummer postnummer)
-            throws PostnummerNotFoundException;
+    Poststed get(Postnummer postnummer);
 }
