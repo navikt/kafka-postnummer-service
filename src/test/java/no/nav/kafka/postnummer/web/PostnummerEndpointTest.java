@@ -19,6 +19,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import java.util.Collections;
+import java.util.Random;
 
 public class PostnummerEndpointTest {
 
@@ -31,17 +32,18 @@ public class PostnummerEndpointTest {
         PostnummerRepositoryStub repository = new PostnummerRepositoryStub(Collections.singletonMap(new Postnummer("2010"),
                 new Poststed("2010", "STRØMMEN", "0231", "SKEDSMO", "P")));
 
-        startWebserver(repository);
+        int port = 1000 + new Random().nextInt(9999);
+        startWebserver(port, repository);
 
         Client client = ClientBuilder.newClient();
-        target = client.target("http://localhost:8080");
+        target = client.target("http://localhost:" + port);
     }
 
-    private void startWebserver(PostnummerRepositoryStub repository) throws Exception {
+    private void startWebserver(int port, PostnummerRepositoryStub repository) throws Exception {
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SECURITY);
         context.setContextPath("/");
 
-        server = new Server(8080);
+        server = new Server(port);
         server.setHandler(context);
 
         context.addServlet(new ServletHolder(new ServletContainer(new ResourceConfig()

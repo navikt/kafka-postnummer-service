@@ -14,6 +14,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
+import java.util.Random;
 
 public class NaisEndpointsTest {
 
@@ -25,17 +26,18 @@ public class NaisEndpointsTest {
 
     @Before
     public void setUp() throws Exception {
-        startWebserver();
+        int port = 1000 + new Random().nextInt(9999);
+        startWebserver(port);
 
         Client client = ClientBuilder.newClient();
-        target = client.target("http://localhost:8080");
+        target = client.target("http://localhost:" + port);
     }
 
-    private void startWebserver() throws Exception {
+    private void startWebserver(int port) throws Exception {
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SECURITY);
         context.setContextPath("/");
 
-        server = new Server(8080);
+        server = new Server(port);
         server.setHandler(context);
 
         context.addServlet(new ServletHolder(new ServletContainer(new ResourceConfig()
