@@ -5,7 +5,7 @@ services:
 before_install:
 - export COMMIT_SHORT=$(git rev-parse --short HEAD)
 script:
-- "./gradlew check shadowJar"
+- "./gradlew build"
 - docker build --pull -t navikt/postnummer-service:$COMMIT_SHORT .
 - |
   if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then

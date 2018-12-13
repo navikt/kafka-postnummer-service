@@ -1,17 +1,4 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.3'
-    }
-}
-
-apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'java'
-apply plugin: 'application'
-
-mainClassName = 'no.nav.kafka.postnummer.Application'
 
 dependencies {
     /* kafka */
@@ -40,4 +27,20 @@ dependencies {
 
 repositories {
     mavenCentral()
+}
+
+task copyRuntimeLibs(type: Copy) {
+    into "$buildDir/libs/"
+    from configurations.compile
+}
+
+assemble.dependsOn copyRuntimeLibs
+
+jar {
+    baseName = "app"
+
+    manifest {
+        attributes 'Main-Class' : 'no.nav.kafka.postnummer.Application'
+        attributes 'Class-Path' : configurations.compile.collect { it.getName() }.join(' ')
+    }
 }
