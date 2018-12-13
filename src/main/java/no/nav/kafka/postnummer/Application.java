@@ -29,7 +29,7 @@ public class Application {
 
         Properties configs = new Properties();
         configs.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, getRequiredProperty(env, "KAFKA_BOOTSTRAP_SERVERS"));
-        configs.put(StreamsConfig.APPLICATION_ID_CONFIG, "streams-postnummer-1-1");
+        configs.put(StreamsConfig.APPLICATION_ID_CONFIG, "postnummer-service");
         configs.put(SaslConfigs.SASL_JAAS_CONFIG, "org.apache.kafka.common.security.plain.PlainLoginModule required " +
                 "username=\"" + getRequiredProperty(env, "KAFKA_USERNAME") + "\" " +
                 "password=\"" + getRequiredProperty(env, "KAFKA_PASSWORD") + "\";");
