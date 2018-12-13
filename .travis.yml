@@ -3,10 +3,10 @@ language: java
 services:
 - docker
 script:
-- make bump-version
-- make
-after_success:
-- echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
-- git config user.name navikt-ci
-- git config user.email 32665735+navikt-ci@users.noreply.github.com
-- ./travis/deploy.sh
+- "./gradlew check shadowJar"
+- docker build --pull -t navikt/postnummer-service:$COMMIT_SHORT .
+- |
+  if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
+    echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
+    docker push navikt/postnummer-service:$COMMIT_SHORT
+  fi
