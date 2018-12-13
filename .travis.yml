@@ -2,6 +2,8 @@ sudo: required
 language: java
 services:
 - docker
+before_install:
+- export COMMIT_SHORT=$(git rev-parse --short HEAD)
 script:
 - "./gradlew check shadowJar"
 - docker build --pull -t navikt/postnummer-service:$COMMIT_SHORT .
