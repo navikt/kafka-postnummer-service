@@ -12,14 +12,7 @@ public class WebServer {
 
     private static final Logger LOG = LoggerFactory.getLogger(WebServer.class);
 
-    private static final int DEFAULT_PORT = 8080;
-    private static final String DEFAULT_CONTEXT_PATH = "/";
-
     private final Server jettyServer;
-
-    public WebServer(ResourceConfig resourceConfig) {
-        this(DEFAULT_PORT, DEFAULT_CONTEXT_PATH, resourceConfig);
-    }
 
     public WebServer(int port, String contextPath, ResourceConfig resourceConfig) {
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SECURITY);

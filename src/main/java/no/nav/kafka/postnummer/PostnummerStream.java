@@ -24,70 +24,13 @@ import java.util.function.Supplier;
 public class PostnummerStream {
     private static final Logger LOG = LoggerFactory.getLogger(PostnummerStream.class);
 
-    private static final String POSTNUMMER_TOPIC = "postnummer";
     private static final String POSTNUMMER_STATE_STORE = "postnummer-store";
 
-    private final Topology topology;
+    private final Supplier<ReadOnlyKeyValueStore<Postnummer, Poststed>> postnummerStoreSupplier;
+    private final KafkaStreams streams;
 
-    private Supplier<ReadOnlyKeyValueStore<Postnummer, Poststed>> postnummerStoreSupplier;
-    private KafkaStreams streams;
-
-    public PostnummerStream() {
-        StreamsBuilder builder = new StreamsBuilder();
-
-        configureStreams(builder);
-
-        topology = builder.build();
-    }
-
-    private void configureStreams(StreamsBuilder builder) {
-        Serde<Postnummer> postnummerSerde = new JsonSerde<>(Postnummer.class);
-        Serde<Poststed> poststedSerde = new JsonSerde<>(Poststed.class);
-
-        KTable<Postnummer, Poststed> postnummerTable = builder.stream(POSTNUMMER_TOPIC,
-                Consumed.with(Serdes.String(), Serdes.String())
-                        .withOffsetResetPolicy(Topology.AutoOffsetReset.EARLIEST))
-                .map(new KeyValueMapper<String, String, KeyValue<Postnummer, Poststed>>() {
-                    @Override
-                    public KeyValue<Postnummer, Poststed> apply(String key, String value) {
-                        StringTokenizer tokenizer = new StringTokenizer(value, "\t");
-                        Postnummer postnummer = new Postnummer(tokenizer.nextToken());
-                        return new KeyValue<>(
-                                postnummer,
-                                new Poststed(postnummer.getPostnummer(), tokenizer.nextToken(),
-                                        tokenizer.nextToken(), tokenizer.nextToken(),
-                                        tokenizer.nextToken())
-                        );
-                    }
-                })
-                .groupByKey(Serialized.with(postnummerSerde, poststedSerde))
-                .aggregate(new Initializer<Poststed>() {
-                    @Override
-                    public Poststed apply() {
-                        return null;
-                    }
-                }, new Aggregator<Postnummer, Poststed, Poststed>() {
-                    @Override
-                    public Poststed apply(Postnummer key, Poststed value, Poststed aggregate) {
-                        return value;
-                    }
-                }, Materialized.<Postnummer, Poststed, KeyValueStore<Bytes, byte[]>>as(POSTNUMMER_STATE_STORE)
-                        .withKeySerde(postnummerSerde)
-                        .withValueSerde(poststedSerde));
-
-        postnummerTable.toStream().print(Printed.toSysOut());
-    }
-
-    public Topology getTopology() {
-        return topology;
-    }
-
-    public Supplier<ReadOnlyKeyValueStore<Postnummer, Poststed>> getStore() {
-        return postnummerStoreSupplier;
-    }
-
-    public void run(Properties configs) {
-        streams = new KafkaStreams(topology, configs);
+    public PostnummerStream(Properties configs) {
+        streams = new KafkaStreams(new PostnummerTopology().topology, configs);
 
         postnummerStoreSupplier = new Supplier<ReadOnlyKeyValueStore<Postnummer, Poststed>>() {
             @Override
@@ -96,11 +39,23 @@ public class PostnummerStream {
                 return streams.store(POSTNUMMER_STATE_STORE, QueryableStoreTypes.keyValueStore());
             }
         };
+    }
 
+    public Supplier<ReadOnlyKeyValueStore<Postnummer, Poststed>> getStore() {
+        return postnummerStoreSupplier;
+    }
+
+    public void run(Runnable shutdownHook) {
         streams.setStateListener(new KafkaStreams.StateListener() {
             @Override
             public void onChange(KafkaStreams.State newState, KafkaStreams.State oldState) {
                 LOG.info("From state={} to state={}", oldState, newState);
+
+                if (newState == KafkaStreams.State.ERROR) {
+                    // if the stream has died there is no reason to keep spinning
+                    LOG.info("No reason to keep living, closing stream");
+                    shutdownHook.run();
+                }
             }
         });
 
@@ -115,5 +70,65 @@ public class PostnummerStream {
 
     public boolean isRunning() {
         return streams.state().isRunning();
+    }
+
+    public void stop() {
+        streams.close();
+    }
+
+    public static class PostnummerTopology {
+        private static final String POSTNUMMER_TOPIC = "postnummer";
+
+        private final Topology topology;
+
+        public PostnummerTopology() {
+            StreamsBuilder builder = new StreamsBuilder();
+
+            configureStreams(builder);
+
+            topology = builder.build();
+        }
+
+        private void configureStreams(StreamsBuilder builder) {
+            Serde<Postnummer> postnummerSerde = new JsonSerde<>(Postnummer.class);
+            Serde<Poststed> poststedSerde = new JsonSerde<>(Poststed.class);
+
+            KTable<Postnummer, Poststed> postnummerTable = builder.stream(POSTNUMMER_TOPIC,
+                    Consumed.with(Serdes.String(), Serdes.String())
+                            .withOffsetResetPolicy(Topology.AutoOffsetReset.EARLIEST))
+                    .map(new KeyValueMapper<String, String, KeyValue<Postnummer, Poststed>>() {
+                        @Override
+                        public KeyValue<Postnummer, Poststed> apply(String key, String value) {
+                            StringTokenizer tokenizer = new StringTokenizer(value, "\t");
+                            Postnummer postnummer = new Postnummer(tokenizer.nextToken());
+                            return new KeyValue<>(
+                                    postnummer,
+                                    new Poststed(postnummer.getPostnummer(), tokenizer.nextToken(),
+                                            tokenizer.nextToken(), tokenizer.nextToken(),
+                                            tokenizer.nextToken())
+                            );
+                        }
+                    })
+                    .groupByKey(Serialized.with(postnummerSerde, poststedSerde))
+                    .aggregate(new Initializer<Poststed>() {
+                        @Override
+                        public Poststed apply() {
+                            return null;
+                        }
+                    }, new Aggregator<Postnummer, Poststed, Poststed>() {
+                        @Override
+                        public Poststed apply(Postnummer key, Poststed value, Poststed aggregate) {
+                            return value;
+                        }
+                    }, Materialized.<Postnummer, Poststed, KeyValueStore<Bytes, byte[]>>as(POSTNUMMER_STATE_STORE)
+                            .withKeySerde(postnummerSerde)
+                            .withValueSerde(poststedSerde));
+
+            postnummerTable.toStream().print(Printed.toSysOut());
+        }
+
+        public Topology getTopology() {
+            return topology;
+        }
     }
 }

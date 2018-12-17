@@ -28,8 +28,7 @@ public class PostnummerStreamTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test");
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
 
-        PostnummerStream stream = new PostnummerStream();
-        testDriver = new TopologyTestDriver(stream.getTopology(), props);
+        testDriver = new TopologyTestDriver(new PostnummerStream.PostnummerTopology().getTopology(), props);
         store = testDriver.getKeyValueStore("postnummer-store");
     }
 

@@ -12,6 +12,6 @@ public class TestApplication {
         configs.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         configs.put(StreamsConfig.APPLICATION_ID_CONFIG, "streams-postnummer-1-1");
 
-        new Application(configs).run();
+        new Application(configs, 8080).run();
     }
 }

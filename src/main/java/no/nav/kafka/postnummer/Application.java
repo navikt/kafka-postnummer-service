@@ -20,9 +20,8 @@ public class Application {
     private static final Logger LOG = LoggerFactory.getLogger(Application.class);
 
     private final ResourceConfig resourceConfig = new ResourceConfig();
-    private final WebServer webServer = new WebServer(resourceConfig);
-    private final PostnummerStream postnummerStream = new PostnummerStream();
-    private final Properties configs;
+    private final WebServer webServer;
+    private final PostnummerStream postnummerStream;
 
     public static void main(String[] args) throws Exception {
         Map<String, String> env = System.getenv();
@@ -46,20 +45,19 @@ public class Application {
             }
         }
 
-        new Application(configs).run();
+        new Application(configs, Integer.valueOf(env.getOrDefault("HTTP_PORT", "8080"))).run();
     }
 
     private static <K, V> V getRequiredProperty(Map<K, V> map, K key) {
         return Optional.ofNullable(map.get(key)).orElseThrow(() -> new IllegalStateException("Missing required property " + key));
     }
 
-    public Application(Properties configs) {
-        this.configs = configs;
+    public Application(Properties configs, int port) {
+        this.webServer = new WebServer(port, "/", resourceConfig);
+        this.postnummerStream = new PostnummerStream(configs);
     }
 
     public void run() throws Exception {
-        postnummerStream.run(configs);
-
         resourceConfig.register(new NaisEndpoints(postnummerStream::isRunning, () -> {
                 try {
                     postnummerStream.getStore().get();
@@ -74,5 +72,14 @@ public class Application {
 
 
         webServer.start();
+
+        postnummerStream.run(() -> {
+            System.exit(1);
+        });
+    }
+
+    public void stop() throws Exception {
+        postnummerStream.stop();
+        webServer.stop();
     }
 }
